@@ -1,0 +1,23 @@
+{
+  "name": "Camera Streamer WebRTC",
+  "version": "1.0.0",
+  "description": "Un simple ejemplo de una conexion peer to peer para establecer la conexion de medios entre dos clientes. En este caso, la conexion es entre un cliente y un Streamer.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "WebRTC",
+    "SocketIO"
+  ],
+  "author": "Cucarach0n",
+  "license": "Commercial or proprietary",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.0.1"
+  },
+  "devDependencies": {
+    "eslint": "8.0.1",
+    "nodemon": "^2.0.15"
+  }
+}
