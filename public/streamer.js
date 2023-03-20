@@ -24,6 +24,8 @@ var localStream;
 
 var localStreams = [];
 
+var videoEtiqueta = document.getElementById('vdoPlay');
+
 socket.on("answer", (id, description) => {
   console.log(description);
   peerConnections[id].setRemoteDescription(description);
@@ -59,9 +61,10 @@ socket.on("watcher", id => {
 
   });
   dataChannels.push(dataChannel);
-  
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
   localStreams.push(localStream);
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStreams[localStreams.length-1]));
+  
+  
   peerConnections[id] = peerConnection;
   console.log(peerConnections);
   /*let stream = localStream;
@@ -109,7 +112,7 @@ window.onunload = window.onbeforeunload = () => {
 const videoElement = document.querySelector("video");
 const audioSelect = document.querySelector("select#audioSource");
 const videoSelect = document.querySelector("select#videoSource");
-videoElement.style.display = 'none';
+//videoElement.style.display = 'none';
 audioSelect.onchange = ()=>{getStream()};
 videoSelect.onchange = ()=>{getStream()};
 
@@ -157,11 +160,11 @@ function getStream() {
       track.stop();
     });
   }*/
-  if (localStream) {
+  /*if (localStream) {
     localStream.getTracks().forEach(track => {
       track.stop();
     });
-  }
+  }*/
   const audioSource = audioSelect.value;
   const videoSource = videoSelect.value;
   const constraints = {
@@ -178,6 +181,7 @@ function getStream() {
 
 function gotStream(stream) {
   localStream = stream;
+  //videoEtiqueta.srcObject = stream;
   //window.stream = stream;
   audioSelect.selectedIndex = [...audioSelect.options].findIndex(
     option => option.text === stream.getAudioTracks()[0].label
@@ -236,7 +240,7 @@ function validarStatusStream(){
       }
       console.log('cerrando stream');
       console.log(localStream);
-      
+      localStream = null;
       btnTransmitir.dataset.estado = 'true';
       btnTransmitir.innerText = "Transmitir video"
     };
