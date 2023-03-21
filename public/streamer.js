@@ -15,6 +15,8 @@ var reloadStream = false;
 var IdLastViewer = 0;
 var listViewers = [];
 
+var viewers = [];
+
 var dataChannels = [];
 
 var btnTransmitir = document.getElementById('btnTransmitir');
@@ -61,10 +63,19 @@ socket.on("watcher", id => {
 
   });
   dataChannels.push(dataChannel);
+  
+  //localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  /*for(var i = 0; i < localStreams.length; i++){
+    
+    localStreams[i].getTracks().forEach(track => peerConnection.addTrack(track, localStreams[i]));
+  }*/
+  //localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  
+  
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
   localStreams.push(localStream);
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStreams[localStreams.length-1]));
   
-  
+  videoEtiqueta.srcObject = localStream;
   peerConnections[id] = peerConnection;
   console.log(peerConnections);
   /*let stream = localStream;
@@ -92,7 +103,7 @@ socket.on("watcher", id => {
 socket.on("disconnectPeer", id => {
   peerConnections[id].close();
   delete peerConnections[id];
-  listaViewersNuevo = [];
+  var listaViewersNuevo = [];
   for (var i = 0; i < listViewers.length; i++) {
     if(listViewers[i]!= id){
       listaViewersNuevo.push(listViewers[i]);
@@ -113,8 +124,55 @@ const videoElement = document.querySelector("video");
 const audioSelect = document.querySelector("select#audioSource");
 const videoSelect = document.querySelector("select#videoSource");
 //videoElement.style.display = 'none';
-audioSelect.onchange = ()=>{getStream()};
-videoSelect.onchange = ()=>{getStream()};
+/*audioSelect.onchange = ()=>{validarStatusStream()};
+videoSelect.onchange = ()=>{validarStatusStream()};*/
+function reloadStreamV2(){
+  console.log(listViewers);
+  for(var i = 0; i < listViewers.length; i++){
+   
+    
+    const audioSource = audioSelect.value;
+    const videoSource = videoSelect.value;
+    const constraints = {
+      audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+      video: { deviceId: videoSource ? { exact: videoSource } : undefined }
+    };
+    navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then((stream)=>{
+      
+      localStream = stream;
+  
+      //window.stream = stream;
+      audioSelect.selectedIndex = [...audioSelect.options].findIndex(
+        option => option.text === stream.getAudioTracks()[0].label
+      );
+      videoSelect.selectedIndex = [...videoSelect.options].findIndex(
+        option => option.text === stream.getVideoTracks()[0].label
+      );
+      
+      console.log("Trata de iniciar conexion")
+      iniciarConexion(listViewers[i]);
+      
+    })
+    .catch(handleError);
+  }
+}
+audioSelect.onchange = ()=>{
+  for(var i = 0; i < localStreams.length; i++){
+    localStreams[i].getTracks().forEach(track => track.stop());
+  }
+  listViewers = [];
+  socket.emit("conectar",'streamer');};
+videoSelect.onchange = ()=>{
+  for(var i = 0; i < localStreams.length; i++){
+    localStreams[i].getTracks().forEach(track => track.stop());
+  }
+  listViewers = [];
+  
+  socket.emit("conectar",'streamer');
+};
+
 
 /*getStream()
   .then(getDevices)
@@ -150,6 +208,7 @@ window.addEventListener('load', function() {
 });
 
 function getStream() {
+  
   //reloadStream = reload;
   
   /*navigator.mediaDevices.getUserMedia = (navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webKitGetUserMedia
@@ -165,6 +224,10 @@ function getStream() {
       track.stop();
     });
   }*/
+  /*if(listViewers.length == 0){
+    return;
+  }*/
+  
   const audioSource = audioSelect.value;
   const videoSource = videoSelect.value;
   const constraints = {
@@ -176,12 +239,12 @@ function getStream() {
     .getUserMedia(constraints)
     .then(gotStream)
     .catch(handleError);
-  
+
 }
 
 function gotStream(stream) {
   localStream = stream;
-  //videoEtiqueta.srcObject = stream;
+  
   //window.stream = stream;
   audioSelect.selectedIndex = [...audioSelect.options].findIndex(
     option => option.text === stream.getAudioTracks()[0].label
@@ -193,13 +256,14 @@ function gotStream(stream) {
   //socket.emit("broadcaster",IdLastViewer);
   console.log("Trata de iniciar conexion")
   iniciarConexion();
+  
 }
 
 
 
 
-function iniciarConexion(){
-
+function iniciarConexion(idViewer){
+  
   if(localStream == null){
     console.log('no hay stream' + 'con id ' + IdLastViewer);
     /*getStream(false)
@@ -209,7 +273,7 @@ function iniciarConexion(){
   else{
     console.log('hay stream' + 'con id ' + IdLastViewer);
   }
-  if(reloadStream == false){
+  /*if(reloadStream == false){
     console.log('iniciando conexion con un viewer');
     socket.emit("broadcaster",IdLastViewer);
   }
@@ -217,9 +281,16 @@ function iniciarConexion(){
     console.log('iniciando conexion con varios viewers');
     for(var i = 0; i < listViewers.length; i++){
       socket.emit("broadcaster",listViewers[i]);
-    }
+      
+  }*/
+  console.log("Enviando conexion al viewer con id " + idViewer);
+  socket.emit("broadcaster",idViewer);
+  /*for(var i = 0; i < listViewers.length; i++){
+    var temp = listViewers.pop();
+    socket.emit("broadcaster",temp);
     
-  }
+    console.log('eliminando ' + temp);
+  }*/
   
   //socket.emit("broadcaster",IdLastViewer);
 }
@@ -228,7 +299,7 @@ function validarStatusStream(){
 
   if (solicitud ==false) {
     
-    if(localStream){
+    if(localStream != undefined || localStream != null){
       
       /*localStream.getTracks().forEach(track => {
         track.stop();
@@ -238,20 +309,23 @@ function validarStatusStream(){
           track.stop();
         });
       }
+      localStream.getTracks().forEach(track => {
+        track.stop();
+      });
+      listViewers = [];
       console.log('cerrando stream');
-      console.log(localStream);
-      localStream = null;
       btnTransmitir.dataset.estado = 'true';
       btnTransmitir.innerText = "Transmitir video"
-    };
+    }
+    
   }else{
     
     btnTransmitir.dataset.estado = 'false';
-      btnTransmitir.innerText = "Parar transmicion"
+    btnTransmitir.innerText = "Parar transmicion"
+  
     getStream()
       .then(getDevices)
       .then(gotDevices);
-    
   }
   console.log('validando estado de stream');
 };
@@ -297,16 +371,63 @@ socket.on('solicitudstream', function (estado,idViewer,streamer) {
     
     iniciarConexion();
   }*/
+  
   reloadStream = streamer;
   console.log("Recibiendo solicitud de streamer :" +  streamer);
   console.log('Recibiendo solicitud de streamer :' + idViewer + ' con solicitud ' + solicitud + ' y estado ' + estado); 
-  IdLastViewer = idViewer;
-  listViewers.push(idViewer);
+  //IdLastViewer = idViewer;
+  //listViewers.push(idViewer);
   if (solicitud != estado){
     console.log("Cambiando Estado a " + estado);
+    solicitud = estado;
   }
-  solicitud = estado;
-  validarStatusStream();
+  
+  listViewers.push(idViewer);
+  
+
+  if(solicitud == false){
+    for(var i = 0; i < localStreams.length; i++){
+      localStreams[i].getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+    localStream.getTracks().forEach(track => {
+      track.stop();
+    });
+    localStream = null;
+    console.log('cerrando stream');
+    btnTransmitir.dataset.estado = 'true';
+    btnTransmitir.innerText = "Transmitir video"
+    return;
+  }
+  //validarStatusStream();
+  const audioSource = audioSelect.value;
+  const videoSource = videoSelect.value;
+  const constraints = {
+    audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+    video: { deviceId: videoSource ? { exact: videoSource } : undefined }
+  };
+  console.log("Obteniendo stream");
+  
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then((stream)=>{
+      
+      localStream = stream;
+  
+      //window.stream = stream;
+      audioSelect.selectedIndex = [...audioSelect.options].findIndex(
+        option => option.text === stream.getAudioTracks()[0].label
+      );
+      videoSelect.selectedIndex = [...videoSelect.options].findIndex(
+        option => option.text === stream.getVideoTracks()[0].label
+      );
+      
+      console.log("Trata de iniciar conexion")
+      iniciarConexion(idViewer);
+      
+    })
+    .catch(handleError);
 });
 
 

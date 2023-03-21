@@ -113,7 +113,7 @@ socket.on("connect", () => {
 socket.on("addNewStream", (solicitud,idStream) => {
   console.log('agregando nuevo stream con id: ' + idStream);
   //esperarConexionTimer(Math.random() * 4000);
-  socket.emit("nuevaSolicitud",solicitud,idStream,true);
+  socket.emit("nuevaSolicitud",solicitud,idStream,false);
 })
 
 
