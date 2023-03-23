@@ -3,14 +3,14 @@
 const peerConnections = {};
 const config = {
   iceServers: [
-      { 
-        "urls": "stun:stun.l.google.com:19302",
-      },
-      // { 
-      //   "urls": "turn:TURN_IP?transport=tcp",
-      //   "username": "TURN_USERNAME",
-      //   "credential": "TURN_CREDENTIALS"
-      // }
+      //{ 
+      //  "urls": "stun:stun.l.google.com:19302",
+      //},
+       { 
+         "urls": "turn:turn.soporgram.com:3478",
+         "username": "cucaracha",
+         "credential": "4583013"
+       }
   ]
 };
 
@@ -21,11 +21,13 @@ const socket = io.connect(window.location.origin);
 const video = document.querySelector("video");
 const enableAudioButton = document.querySelector("#enable-audio");
 
-enableAudioButton.addEventListener("click", enableAudio)
+//enableAudioButton.addEventListener("click", enableAudio)
 var videoNew = document.createElement("video");
 var idStream = [];
 socket.on("offer", (id, description) => {
+
   var tagVideo = document.createElement("video");
+  tagVideo.setAttribute('class',"col col-12 col-sm-10 col-md-6 col-lg-4");
   tagVideo.setAttribute('controls','');
   tagVideo.setAttribute('autoplay','');
   tagVideo.setAttribute('playsinline','');

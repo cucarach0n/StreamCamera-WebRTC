@@ -1,14 +1,14 @@
 const peerConnections = {};
 const config = {
   iceServers: [
-    { 
-      "urls": "stun:stun.l.google.com:19302",
-    },
-    // { 
-    //   "urls": "turn:TURN_IP?transport=tcp",
-    //   "username": "TURN_USERNAME",
-    //   "credential": "TURN_CREDENTIALS"
-    // }
+    //{ 
+      //  "urls": "stun:stun.l.google.com:19302",
+      //},
+      { 
+        "urls": "turn:turn.soporgram.com:3478",
+        "username": "cucaracha",
+        "credential": "4583013"
+      }
   ]
 };
 var reloadStream = false;
@@ -304,11 +304,11 @@ function validarStatusStream(){
       /*localStream.getTracks().forEach(track => {
         track.stop();
       });*/
-      for(var i = 0;i < localStreams.length; i++){
+      /*for(var i = 0;i < localStreams.length; i++){
         localStreams[i].getTracks().forEach(track => {
           track.stop();
         });
-      }
+      }*/
       localStream.getTracks().forEach(track => {
         track.stop();
       });
